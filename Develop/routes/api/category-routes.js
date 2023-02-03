@@ -2,32 +2,84 @@ const router = require('express').Router();
 const { model } = require('../../config/connection');
 const { Category, Product } = require('../../models');
 
-// The `/api/categories` endpoint
+// /api/category
 
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   // find all categories
-  // be sure to include its associated Products
-  Category.findAll({
-    attributes: ['id', 'category_name'],
-    include: [{ model: Product, attributes: ['id', 'product_name', 'price', 'stock', 'category_id'] }]
-  }).then(data => (res.json(data))).catch(err => { console.log(err) })
+
+  console.log('testing')
+  try {
+    const dbCategory = await Category.findAll()
+    res.status(200).json(dbCategory)
+  } catch (err) {
+    res.status(500).json(err)
+    console.log(err)
+  }
+
 });
 
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   // find one category by its `id` value
-  // be sure to include its associated Products
+  try {
+    const dbCategory = await Category.findByPk(req.params.id, {
+      include: [{ model: Product, attributes: ['id', 'product_name', 'price', 'stock', 'category_id'] }]
+    })
+    if (!dbCategory) {
+      res.status(404).json({ message: 'error incorrect id' });
+      return;
+    }
+    res.status(200).json(dbCategory);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   // create a new category
+  try {
+    const dbCategory = await Category.create(req.body);
+    res.status(200).json(dbCategory);
+  } catch (err) {
+    res.status(400).json(err);
+  }
+
 });
 
-router.put('/:id', (req, res) => {
+// problem child
+router.put('/:id', async (req, res) => {
   // update a category by its `id` value
+  Category.update(req.body, {
+    where: {
+      id: req.params.id,
+    }
+  })
+    .then((category) => {
+      return category
+    })
+    .catch((err) => {
+      // console.log(err);
+      res.status(400).json(err);
+    });
+
 });
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   // delete a category by its `id` value
+  try {
+    const dbCategory = await Category.destroy({
+      where: {
+        id: req.params.id
+      }
+    });
+    if (!dbCategory) {
+      res.status(404).json({ message: 'error incorrect id' });
+      return;
+    }
+    res.status(200).json(dbCategory);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+
 });
 
 module.exports = router;
