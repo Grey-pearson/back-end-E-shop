@@ -7,9 +7,16 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 router.get('/', async (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
-  console.log('testing')
   try {
-    const dbProduct = await Product.findAll()
+    const dbProduct = await Product.findAll({
+      include: [
+        Category,
+        {
+          model: Tag,
+          through: ProductTag
+        }
+      ]
+    })
     res.status(200).json(dbProduct)
   } catch (err) {
     res.status(500).json(err)
@@ -21,6 +28,21 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  try {
+    const dbProduct = await Product.findByPk(req.params.id, {
+      include: [
+        Category,
+        {
+          model: Tag,
+          through: ProductTag
+        }
+      ]
+    })
+    res.status(200).json(dbProduct)
+  } catch (err) {
+    res.status(500).json(err)
+    console.log(err)
+  }
 });
 
 // create new product
@@ -99,6 +121,20 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   // delete one product by its `id` value
+  try {
+    const dbProduct = await Product.destroy({
+      where: {
+        id: req.params.id
+      }
+    });
+    if (!dbProduct) {
+      res.status(404).json({ message: 'error incorrect id' });
+      return;
+    }
+    res.status(200).json({ message: `Id: ${req.params.id} has been deleted.` },)//.statusMessage(`${req.params.id} has bsen deleted`);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
 module.exports = router;

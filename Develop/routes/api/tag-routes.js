@@ -7,7 +7,14 @@ router.get('/', async (req, res) => {
   // find all tags
   // be sure to include its associated Product data
   try {
-    const dbTag = await Tag.findAll()
+    const dbTag = await Tag.findAll({
+      include: [
+        {
+          model: Product,
+          attributes: ['id', 'product_name', 'price', 'stock', 'category_id']
+        }
+      ]
+    })
     res.status(200).json(dbTag)
   } catch (err) {
     res.status(500).json(err)
@@ -43,7 +50,18 @@ router.post('/', async (req, res) => {
 });
 
 router.put('/:id', async (req, res) => {
-  // update a tag's name by its `id` value
+  // update a tag's name by its `id` value  
+  Tag.update(req.body, {
+    where: {
+      id: req.params.id,
+    }
+  })
+    .then((tag) => {
+      res.status(200).json(tag)
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
 });
 
 router.delete('/:id', async (req, res) => {

@@ -2,14 +2,15 @@ const router = require('express').Router();
 const { model } = require('../../config/connection');
 const { Category, Product } = require('../../models');
 
-// /api/category
+// /api/categories
 
 router.get('/', async (req, res) => {
   // find all categories
-
-  console.log('testing')
+  // be sure to include its associated Products (include)
   try {
-    const dbCategory = await Category.findAll()
+    const dbCategory = await Category.findAll({
+      include: [{ model: Product, attributes: ['id', 'product_name', 'price', 'stock', 'category_id'] }]
+    })
     res.status(200).json(dbCategory)
   } catch (err) {
     res.status(500).json(err)
@@ -46,7 +47,7 @@ router.post('/', async (req, res) => {
 });
 
 // problem child
-router.put('/:id', async (req, res) => {
+router.put('/:id', (req, res) => {
   // update a category by its `id` value
   Category.update(req.body, {
     where: {
@@ -54,13 +55,11 @@ router.put('/:id', async (req, res) => {
     }
   })
     .then((category) => {
-      return category
+      res.status(200).json(category)
     })
     .catch((err) => {
-      // console.log(err);
       res.status(400).json(err);
     });
-
 });
 
 router.delete('/:id', async (req, res) => {
